@@ -12,21 +12,18 @@ let
     }:
     rustPlatform.buildRustPackage rec {
       pname = "simple-disk-benchmark";
-      version = "0.1.9";
+      version = "0.1.10";
 
       src = fetchFromGitHub {
-        owner = "schwa";
+        owner = "oskardotglobal";
         repo = "simple-disk-benchmark-rs";
         rev = version;
-        hash = "sha256-fpfZVtAII4Y2SJhcmhtP1ZkN4yXIQ31vhvjo/p24r/Q=";
+        hash = "sha256-xTugrFIRIq9J/KChzD3wKg/bzdugDtLLqGwR0dbuxp0";
       };
-      cargoHash = "sha256-gnSWIL9Nz9TmnxRRJqdwfAyGgTxtq98jP2lwkQkFE90=";
-
-      nativeBuildInputs = [ ];
-      buildInputs = [ ]; # lib.optionals stdenv.hostPlatform.isDarwin [ apple-sdk_11 ];
+      cargoHash = "sha256-hbGUxQyIAEDoLgW77Wbr/tmWK9Q+Iq3G18Nbf03d6/M=";
 
       meta = {
-        description = " A simple disk benchmark tool";
+        description = "A simple disk benchmark tool";
         homepage = "https://github.com/schwa/simple-disk-benchmark-rs";
         license = [ lib.licenses.mit ];
         mainProgram = "simple-disk-benchmark";
