@@ -1,0 +1,5 @@
+.direnv
+.idea
+.venv
+benchmark.json
+testfile.dat
