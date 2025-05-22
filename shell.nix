@@ -6,7 +6,6 @@ let
   simple-disk-benchmark = pkgs.callPackage (
     {
       lib,
-      stdenv,
       rustPlatform,
       fetchFromGitHub,
     }:
@@ -15,12 +14,13 @@ let
       version = "0.1.10";
 
       src = fetchFromGitHub {
-        owner = "oskardotglobal";
+        owner = "schwa";
         repo = "simple-disk-benchmark-rs";
         rev = version;
-        hash = "sha256-xTugrFIRIq9J/KChzD3wKg/bzdugDtLLqGwR0dbuxp0";
+        hash = "sha256-VvuSIVYv6HnAraep1zAv5wTmKNxQEPyymaEeDRz2oQg=";
       };
-      cargoHash = "sha256-hbGUxQyIAEDoLgW77Wbr/tmWK9Q+Iq3G18Nbf03d6/M=";
+
+      cargoHash = "sha256-iRKwl3GNprlanbhNH63G1AastGPx4+hZJaGrTlYPGKA=";
 
       meta = {
         description = "A simple disk benchmark tool";
@@ -31,7 +31,7 @@ let
     }
   ) { };
 in
-pkgs.mkShellNoCC {
+pkgs.mkShell {
   buildInputs = with pkgs; [
     simple-disk-benchmark
     nushell
