@@ -79,5 +79,9 @@ def main():
     plt.ylabel("Preis pro GB (USD)")
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.legend()
-    plt.show()
+    
+    try:
+        plt.show()
+    except KeyboardInterrupt:
+        pass
 

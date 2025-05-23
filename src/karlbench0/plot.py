@@ -8,17 +8,15 @@ Disk = { "label": str, "mountpoint": str }
 Series = Tuple[List[float], List[float], str]
 Benchmark = List[Tuple[Disk, List[Tuple[Series, Series]]]]
 
-def main():
-    benchmark_data: Benchmark = json.load(sys.stdin)
-
+def make_plot(benchmark_data: Benchmark):
     num_charts = len(benchmark_data) * 2
     rows = int(np.ceil(np.sqrt(num_charts)))
     cols = int(np.ceil(num_charts / rows))
 
-    fig, axes = plt.subplots(rows, cols)
+    _, axes = plt.subplots(rows, cols)
     axes = [axes] if num_charts == 1 else axes.flatten()
 
-    for i, (chart_info, ax) in enumerate(zip(benchmark_data, axes)):
+    for _, (chart_info, ax) in enumerate(zip(benchmark_data, axes)):
         metadata = chart_info[0]
         data = chart_info[1]
 
@@ -39,6 +37,11 @@ def main():
         axes[j].set_visible(False)
 
     plt.tight_layout()
+
+
+def main():
+    benchmark_data: Benchmark = json.load(sys.stdin)
+    make_plot(benchmark_data)
 
     try:
         plt.show()

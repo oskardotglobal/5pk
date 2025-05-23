@@ -6,6 +6,8 @@ from plumbum import FG, local
 from plumbum.cli.terminal import ask, choose
 from plumbum.cmd import dd, ls, grep, rm, sudo
 
+from karlbench0 import make_plot
+
 
 class Benchmark:
     blocksize_mb: int
@@ -82,15 +84,18 @@ def list_disks() -> list[str]:
     return list(map(lambda dev: f"/dev/{dev}", (ls["/dev"] | grep["-E"][re])().strip().split("\n")))
 
 def main():
-    path = choose("Which disk should we write to?", list_disks())
-    ok = ask(f"Confirm writing to {path}? This will permanently delete all data from the disk.", default=False)
+    try:
+        path = choose("Which disk should we write to?", list_disks())
+        ok = ask(f"Confirm writing to {path}? This will permanently delete all data from the disk.", default=False)
 
-    if not ok:
-        print("Exiting!")
-        return
+        if not ok:
+            print("Exiting!")
+            return
 
-    benchmark = Benchmark(random=True)
-    benchmark.run(path)
+        benchmark = Benchmark(random=True)
+        benchmark.run(path)
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":
