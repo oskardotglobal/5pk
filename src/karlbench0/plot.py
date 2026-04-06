@@ -2,11 +2,16 @@ import json
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
-from typing import Tuple, List
+from typing import Tuple, List, TypedDict
 
-Disk = { "label": str, "mountpoint": str }
+
+class Disk(TypedDict):
+    label: str
+    mountpoint: str
+
 Series = Tuple[List[float], List[float], str]
 Benchmark = List[Tuple[Disk, List[Tuple[Series, Series]]]]
+
 
 def make_plot(benchmark_data: Benchmark):
     num_charts = len(benchmark_data) * 2

@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from bs4 import BeautifulSoup
 from matplotlib import pyplot as plt, ticker
 from collections import defaultdict
@@ -13,24 +14,17 @@ def process_data(data: list[tuple[float, float]]) -> tuple[list[float], list[flo
     sorted_data = sorted([(cap, sum(prices)/len(prices)) for cap, prices in capacity_dict.items()])
     if not sorted_data:
         return [], []
-    return zip(*sorted_data)  # Returns two iterators for capacities and prices
+    return zip(*sorted_data) 
 
 
-def main():
-    scraper = DiskDrivesScraper()
-
-    with open("response.html", "r") as f:
-        html = f.read()
-        soup = BeautifulSoup(html, "lxml")
-
-    # Parse data - fixed price parsing and proper float conversion
+def parse_data(input: list[dict], y_key: str, process_y: Callable[[str], float | None]) -> tuple[list[float], list[float], list[float], list[float]]:
     data = []
-    for item in scraper.getDiskDicts(soup) or []:
+    for item in input or []:
         try:
             if "x" in item.get("Capacity", ''):
                 continue
 
-            price_str = item.get('Price\xa0per\xa0GB', '').replace('$', '').strip()
+            y = process_y(item.get(y_key, ''))
             
             capacity = (
                 float(item.get("Capacity", '').replace(' TB', '').strip()) * 1000
@@ -40,45 +34,63 @@ def main():
 
             tech = item.get("Technology", '').strip()
 
-            if price_str and capacity and tech:
-                price_per_gb = float(price_str)
-
-                if price_per_gb > 2:
-                    continue
-
-                data.append((price_per_gb, capacity, tech))
+            if y and capacity and tech:
+                data.append((capacity, y, tech))
         except (ValueError, AttributeError):
             continue
 
-    print(data)
+    x1, y1 = process_data([(x, y) for (x, y, tech) in data if tech == "HDD"]) or ([], [])
+    x2, y2 = process_data([(x, y) for (x, y, tech) in data if tech != "HDD"]) or ([], [])
 
-    # Process data - ensure we're passing correct (capacity, price) tuples
-    hdd_data = [(y, x) for (x, y, tech) in data if tech == "HDD"]  # (capacity, price)
-    ssd_data = [(y, x) for (x, y, tech) in data if tech != "HDD"]  # (capacity, price)
+    return x1, y1, x2, y2
 
-    # Unpack the processed data properly
-    x1, y1 = process_data(hdd_data) or ([], [])
-    x2, y2 = process_data(ssd_data) or ([], [])
+def main():
+    scraper = DiskDrivesScraper()
 
-    # Convert to lists in case zip objects are exhausted
-    x1, y1 = list(x1), list(y1)
-    x2, y2 = list(x2), list(y2)
+    with open("response.html", "r") as f:
+        html = f.read()
+        soup = BeautifulSoup(html, "lxml")
 
-    # Create plot
+    data = scraper.getDiskDicts(soup)[:-5] 
+
+
     plt.style.use("dark_background")
-
-    plt.figure(figsize=(10, 6))
     
-    plt.plot(x1, y1, marker='o', linestyle='None', color="red", label="HDDs")
-    plt.plot(x2, y2, marker='s', linestyle='None', color="blue", label="SSDs")
-   
-    # plt.gca().xaxis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
+    # Create figure with 2 subplots (1 row, 2 columns)
+    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+    
+    ax1.set_title("Durchschnittspreise für neue Festplatten (amazon.com)")
+    ax1.set_xlabel("Kapazität (GB)")
+    ax1.set_ylabel("Preis pro GB (USD)")
+    ax1.grid(True, linestyle='--', alpha=0.7)
 
-    plt.title("Durchschnittspreise für neue Festplatten (amazon.com)")
-    plt.xlabel("Kapazität (GB)")
-    plt.ylabel("Preis pro GB (USD)")
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.legend()
+    x1, y1, x2, y2 = parse_data(
+        data,
+        'Price\xa0per\xa0GB',
+        lambda ppg: float(ppg.replace('$', '').strip())
+    )
+
+    ax1.plot(x1, y1, marker='o', linestyle='None', color="red", label="HDDs")
+    ax1.plot(x2, y2, marker='s', linestyle='None', color="blue", label="SSDs")
+    ax1.legend()
+
+    ax2.set_title("Durchschnittspreise für neue Festplatten (amazon.com)")
+    ax2.set_xlabel("Kapazität (GB)")
+    ax2.set_ylabel("Preis (USD)")
+    ax2.grid(True, linestyle='--', alpha=0.7)
+
+    x1, y1, x2, y2 = parse_data(
+        data,
+        'Price',
+        lambda price: float(price.replace('$', '').strip())
+    )
+
+    ax2.plot(x1, y1, marker='o', linestyle='None', color="red", label="HDDs")
+    ax2.plot(x2, y2, marker='s', linestyle='None', color="blue", label="SSDs")
+    # ax2.yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
+    ax2.legend()
+
+    plt.tight_layout()
     
     try:
         plt.show()
